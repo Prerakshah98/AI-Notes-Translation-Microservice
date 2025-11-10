@@ -2,3 +2,8 @@ django
 djangorestframework
 psycopg2-binary
 python-dotenv
+celery
+redis 
+transformers
+sentencepiece
+torch
