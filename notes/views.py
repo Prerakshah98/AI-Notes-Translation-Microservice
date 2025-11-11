@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .tasks import translate_note_task
 from django.core.cache import cache
+from rest_framework.views import APIView
+from django.db.models import Count
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -63,3 +65,28 @@ class NoteViewSet(viewsets.ModelViewSet):
         cache.delete(f'note_{note_id}')
         print(f"Cache DELETED for note {note_id}")
         return response
+    
+    
+class AnalyticsStatsView(APIView):
+    
+    def get(self, request, format=None):
+        
+        total_notes = Note.objects.count()
+        
+        total_translations = Note.objects.filter(
+            translated_text__isnull=False
+        ).count()
+
+        language_breakdown = Note.objects.values(
+            'original_language'
+        ).annotate(
+            count = Count('original_language')
+        ).order_by('-count')
+        
+        data = {
+            'total_notes': total_notes,
+            'total_translations': total_translations,
+            'language_breakdown': list(language_breakdown),
+        }
+        
+        return Response(data)

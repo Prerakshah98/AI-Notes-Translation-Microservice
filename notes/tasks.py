@@ -1,8 +1,10 @@
+from re import A
 from venv import logger
 from celery import shared_task
 from .models import Note
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import logging
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,7 @@ def translate_note_task(note_id, target_language):
         # 1. Load model and tokenizer
         model_name = f'Helsinki-NLP/opus-mt-{note.original_language}-{target_language}'
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_safetensors=True)
 
         # 2. Prepare text and translate
         inputs = tokenizer(note.original_text, return_tensors="pt", padding=True, truncation=True)
@@ -25,6 +27,10 @@ def translate_note_task(note_id, target_language):
         note.translated_text = translated_text
         note.translated_language = target_language
         note.save()
+        
+        # 4. Invalidate the cache
+        cache_key = f'note_{note_id}'
+        cache.delete(cache_key)
 
         logger.info(f"Successfully translated note {note_id} to {target_language}")
         return f"Translation complete for note {note_id}"

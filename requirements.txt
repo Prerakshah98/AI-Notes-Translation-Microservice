@@ -6,5 +6,6 @@ celery
 redis 
 transformers
 sentencepiece
-torch
+torch==2.3.1
 django-redis
+gunicorn
