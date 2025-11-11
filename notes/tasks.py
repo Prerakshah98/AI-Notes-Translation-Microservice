@@ -13,22 +13,18 @@ def translate_note_task(note_id, target_language):
     try:
         note = Note.objects.get(id=note_id)
 
-        # 1. Load model and tokenizer
         model_name = f'Helsinki-NLP/opus-mt-{note.original_language}-{target_language}'
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name, use_safetensors=True)
 
-        # 2. Prepare text and translate
         inputs = tokenizer(note.original_text, return_tensors="pt", padding=True, truncation=True)
         translated_ids = model.generate(**inputs)
         translated_text = tokenizer.decode(translated_ids[0], skip_special_tokens=True)
 
-        # 3. Save to database
         note.translated_text = translated_text
         note.translated_language = target_language
         note.save()
         
-        # 4. Invalidate the cache
         cache_key = f'note_{note_id}'
         cache.delete(cache_key)
 
