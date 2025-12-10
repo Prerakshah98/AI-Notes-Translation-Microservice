@@ -2,7 +2,6 @@
 
 This project is a scalable, containerized Django-based backend microservice. It allows users to create text-based notes, asynchronously translate them into other languages using a background AI model, and retrieve analytics. The entire application is containerized with Docker for easy and reliable local deployment.
 
-This project was built as a backend SDE-2 assignment.
 
 ---
 
